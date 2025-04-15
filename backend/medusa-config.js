@@ -5,11 +5,17 @@ module.exports = {
   projectConfig: {
     database_url: process.env.DATABASE_URL || "postgres://localhost/medusa",
     database_type: "postgres",
+    port: process.env.PORT || 9000, // ✅ toegevoegd voor Render-poortbinding
     jwtSecret: process.env.JWT_SECRET || "supersecret",
     cookieSecret: process.env.COOKIE_SECRET || "supercookie",
     store_cors: process.env.STORE_CORS || "http://localhost:3000",
     admin_cors: process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:9000",
     redis_url: process.env.REDIS_URL !== "fake" ? process.env.REDIS_URL : undefined,
+    extra: {
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    },
   },
   plugins: [
     {
