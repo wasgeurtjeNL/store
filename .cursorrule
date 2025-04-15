@@ -1,0 +1,169 @@
+You are an expert in TypeScript, Node.js, Next.js App Router, Medusa.js, TailwindCSS, Shadcn UI, and e-commerce backend systems.
+
+---
+
+Always remember:
+- Keep frontend and backend concerns separate
+- Use `.spec.ts` for tests (optional in `__tests__` folders)
+- Write clean, testable logic with real-world business use in mind
+IMPORTANT!! Keep the frotend in wasgeurtje-store\frontend (Dont make duplicate frontend) !!
+---
+
+## Code Style and Structure
+
+- ✅ Use functional + declarative patterns; **avoid classes**
+- ✅ Prefer composition over inheritance
+- ✅ Use **async/await**, never `.then()`
+- ✅ Use `export const` instead of `default export` for clarity
+- ✅ Use **TailwindCSS utility classes** for layout and style
+- ✅ Group related business logic in services/hooks/utils folders
+- ✅ Pages = routing only → use components/hooks inside
+
+---
+
+## File Structure (Next.js App Router)
+
+- `app/` → routes & pages
+- `components/` → shared UI elements (small + reusable)
+- `sections/` → larger page blocks (e.g., Hero, Features)
+- `lib/` → helpers/utils
+- `types/` → TypeScript types only
+- `hooks/` → custom React hooks
+- `store/` → Zustand or context state management
+- `services/` → Medusa API calls or backend logic
+
+---
+
+## Naming Conventions
+
+- 🔠 Use **kebab-case** for folders: `product-list`, `order-summary`
+- 🧩 Use **PascalCase** for React components: `OrderSummary.tsx`
+- ⚙️ Use `useCamelCase` for hooks: `useCart`, `useFragrances`
+
+---
+
+## Backend Rules (Medusa.js)
+
+- 🧠 Use `services/` folder to organize logic per domain
+- 🧾 Always validate input using `class-validator` or DTOs
+- 🔐 Secure routes and API logic based on customer/admin scope
+- 🌿 Use decorators like `@Entity`, `@Column`, `@BeforeInsert`
+- 🔁 Use repositories to handle DB logic, not inside services directly
+
+---
+
+## AdminJS Integration Lessons
+
+- ⚠️ Avoid mixing `.ts` and `.js` files in the `src/api` directory to prevent Babel compilation issues
+- 📦 Use compatible AdminJS versions (adminjs@6.8.7, @adminjs/express@5.1.0, @adminjs/sql@1.0.0) for CommonJS projects 
+- 🔄 Add `"type": "commonjs"` to package.json to ensure Node.js treats files correctly
+- 🔌 Use `@adminjs/sql` adapter instead of `@adminjs/typeorm` for better compatibility
+- 🔒 Set up authentication with environment variables (ADMIN_EMAIL, ADMIN_PASSWORD, ADMINJS_COOKIE_SECRET)
+
+---
+
+## Tailwind Rules
+
+- Always use utility classes
+- Avoid global CSS unless for tokens or resets
+- Use `@apply` only in component-specific styling
+
+---
+
+## Cursor Use Guidelines
+
+- Break complex logic into small, readable functions
+- Avoid repeating yourself — if two components do similar things, extract shared logic
+- Always keep long-running processes async
+- For Medusa backend: use services instead of directly modifying repositories in routes
+- For frontend: use `.env.local` to connect to backend, never hardcode URLs
+
+## File directory
+wasgeurtje/
+│
+├── wasgeurtje-store/
+│   ├── frontend/
+│   │   ├── app/                     # Next.js App Router (zonder src/)
+│   │   │   ├── (shop)/
+│   │   │   │   ├── page.tsx
+│   │   │   │   ├── producten/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [handle]/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── geuren/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── collecties/
+│   │   │   │   │   ├── page.tsx
+│   │   │   │   │   └── [handle]/
+│   │   │   │   │       └── page.tsx
+│   │   │   │   ├── winkelwagen/
+│   │   │   │   │   └── page.tsx
+│   │   │   │   └── afrekenen/
+│   │   │   │       └── page.tsx
+│   │   │   ├── api/
+│   │   │   │   ├── webhooks/
+│   │   │   │   └── proxy/
+│   │   │   ├── layout.tsx
+│   │   │   ├── globals.css
+│   │   │   └── favicon.ico
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── Header.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   ├── MobileNav.tsx
+│   │   │   │   └── CountrySelector.tsx
+│   │   │   ├── product/
+│   │   │   │   ├── ProductCard.tsx
+│   │   │   │   ├── ProductGrid.tsx
+│   │   │   │   ├── ProductDetail.tsx
+│   │   │   │   ├── VariantSelector.tsx
+│   │   │   │   └── FragranceIcon.tsx
+│   │   │   ├── cart/
+│   │   │   │   ├── CartItem.tsx
+│   │   │   │   ├── CartSummary.tsx
+│   │   │   │   └── AddToCartButton.tsx
+│   │   │   ├── checkout/
+│   │   │   │   ├── CheckoutForm.tsx
+│   │   │   │   ├── ShippingOptions.tsx
+│   │   │   │   └── PaymentForm.tsx
+│   │   │   └── ui/
+│   │   │       ├── Button.tsx
+│   │   │       ├── Input.tsx
+│   │   │       ├── Badge.tsx
+│   │   │       └── Select.tsx
+│   │   ├── lib/
+│   │   │   ├── medusa/
+│   │   │   │   ├── client.ts
+│   │   │   │   └── hooks.ts
+│   │   │   └── utils/
+│   │   │       ├── price.ts
+│   │   │       └── seo.ts
+│   │   ├── providers/
+│   │   │   ├── cart.tsx
+│   │   │   └── locale.tsx
+│   │   ├── hooks/
+│   │   │   └── useCart.ts
+│   │   ├── types/
+│   │   │   ├── medusa.ts
+│   │   │   └── product.ts
+│   │   └── public/
+│   │       ├── images/
+│   │       └── locales/
+│
+├── backend/                        # Medusa.js backend (nu in root)
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── webhooks.ts
+│   │   ├── services/
+│   │   │   ├── fragrance.ts
+│   │   │   └── loyalty.ts
+│   │   ├── subscribers/
+│   │   │   └── order.ts
+│   │   └── models/
+│   │       └── fragrance.ts
+│   ├── medusa-config.js
+│   └── seed/
+│
+├── .cursorrule
+├── .cursorrule.bak
+└── .git/
