@@ -1,5 +1,11 @@
-const { develop } = require("@medusajs/medusa");
+const { start } = require("@medusajs/medusa");
 
-develop().catch((err) => {
+const port = process.env.PORT || 9000;
+const host = "0.0.0.0"; // belangrijk voor Render!
+
+start({
+  port,
+  host,
+}).catch((err) => {
   console.error("Medusa crashed:", err);
 });
