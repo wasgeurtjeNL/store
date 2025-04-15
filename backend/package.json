@@ -18,6 +18,7 @@
     "adminjs": "6.8.7",
     "express-formidable": "^1.2.0",
     "express-session": "^1.18.1",
+    "medusa-cli": "^0.5.5",
     "medusa-file-s3": "^1.4.2",
     "pg": "^8.10.0",
     "react-is": "^19.1.0",
