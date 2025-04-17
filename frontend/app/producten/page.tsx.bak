@@ -1,0 +1,63 @@
+// app/producten/page.tsx
+
+import Medusa from '@medusajs/medusa-js'
+import Image from 'next/image'
+import Link from 'next/link'
+
+export const revalidate = 0 // geen caching tijdens dev, voor live kun je dit verhogen
+
+async function getProducts() {
+  try {
+    const medusa = new Medusa({
+      baseUrl: process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 'http://localhost:9000',
+      maxRetries: 3,
+    })
+
+    const { products } = await medusa.products.list()
+    return products
+  } catch (err) {
+    console.error('Fout bij ophalen producten:', err)
+    return []
+  }
+}
+
+export default async function ProductenPage() {
+  const products = await getProducts()
+
+  return (
+    <main className="p-6">
+      <h1 className="text-2xl font-bold mb-6">🧼 Onze Producten</h1>
+
+      {products.length === 0 && (
+        <p className="text-gray-500">Er zijn nog geen producten beschikbaar.</p>
+      )}
+
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {products.map((product) => (
+          <li key={product.id} className="bg-white p-4 rounded-2xl shadow hover:shadow-lg transition">
+            <Link href={`/product/${product.handle}`}>
+              <div>
+                {/* Gebruik product thumbnail als die bestaat */}
+                {product.thumbnail ? (
+                  <Image
+                    src={product.thumbnail}
+                    alt={product.title}
+                    width={300}
+                    height={300}
+                    className="object-cover w-full h-[200px] rounded-xl mb-3"
+                  />
+                ) : (
+                  <div className="w-full h-[200px] bg-gray-200 rounded-xl mb-3 flex items-center justify-center">
+                    <span className="text-gray-500">Geen afbeelding</span>
+                  </div>
+                )}
+                <h2 className="text-lg font-semibold">{product.title}</h2>
+                <p className="text-sm text-gray-600">{product.description}</p>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </main>
+  )
+}
