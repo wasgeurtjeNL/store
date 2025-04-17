@@ -1,0 +1,135 @@
+# 📁 Projectstructuur: my-medusa-store
+
+Dit project is een monorepo waarin we zowel de Medusa backend als de volledige custom Next.js frontend voor Wasgeurtje.nl onderhouden. 
+Het doel is om de volledige e-commerce beleving van https://wasgeurtje.nl na te bouwen, met integratie van Medusa als headless backend en een pixel-perfect Next.js frontend. De backend beheert alle bedrijfslogica zoals producten, orders, loyaliteitsprogramma’s en voorraadbeheer. De frontend dient als representatieve, conversie-geoptimaliseerde webshop gekoppeld aan de backend.
+
+## ✅ Doel van het project
+
+- Volledige rebuild van Wasgeurtje.nl in een modern headless stack
+- Backend: Medusa (gehost op Render & lokaal), beheert businesslogica, extensies, workflows en REST API's
+- Frontend: Next.js 14 (App Router) met Supabase Auth SSR ondersteuning (bijv. voor loyalty/mijn account, gepersonaliseerd shoppen)
+- API-integratie via `@medusajs/medusa-js` (op de frontend)
+- Pixel-perfect, elegant en conversiegericht design gebaseerd op https://wasgeurtje.nl
+- Futureproof architectuur, geschikt voor composable commerce / JAMstack-principes
+
+---
+
+## 📁 Backend structuur (Medusa)
+
+```
+my-medusa-store/
+├── src/                         # Medusa backendlogica
+│   ├── admin/                   # Admin-routes en panels
+│   ├── api/                     # REST API-routes (store/admin)
+│   ├── jobs/                    # Periodieke jobs, background tasks
+│   ├── links/                   # Relationele links tussen modules
+│   ├── modules/                 # Medusa-modules en services (ProductService, OrderService etc.)
+│   ├── scripts/                 # Seed, integratie scripts, utilities
+│   ├── subscribers/             # Event-driven handlers (bijv. na order geplaatst)
+│   └── workflows/               # Custom workflows (order flow, loyalty flow etc.)
+│
+├── integration-tests/          # Backend-integratietests
+├── medusa-config.ts            # Projectconfiguratie incl. database, Redis, plugins, poortinstelling
+├── .env                        # Gevoelige configuratie: DATABASE_URL, REDIS_URL, API_KEYS
+├── .env.template               # Template voor nieuwe devs / staging
+├── package.json                # Backend dependencies
+├── yarn.lock                   # Dependency lock
+├── tsconfig.json               # Typescript configuratie
+└── ...                         # Jest config, logging tools, CLI scripts
+```
+
+### 🌐 Voorbeeld API:
+- `http://localhost:9000/store/products` → Openbare productdata (frontend gebruikt deze)
+- `http://localhost:9000/admin/orders` → Beheerderslogica (afgeschermd via API key/token)
+
+Medusa draait lokaal op poort `9000` en is gekoppeld aan je lokale PostgreSQL database + Redis instance. Hosting via Render is mogelijk.
+
+---
+
+## 📁 Frontend structuur (Next.js 14)
+
+```
+frontend/
+├── app/                         # Next.js App Router
+│   ├── layout.tsx              # Algemene layout (header/footer)
+│   ├── page.tsx                # Homepage
+│   ├── producten/              # Product overzichtspagina
+│   │   └── [handle]/page.tsx   # Dynamische product detailpagina
+│   ├── categorieen/            # Gecategoriseerde collecties (Premium, Best verkocht, etc.)
+│   ├── winkelwagen/page.tsx    # Cart functionaliteit
+│   ├── afrekenen/page.tsx      # Checkout (incl. adres, betaalmethodes)
+│   ├── login/page.tsx          # Supabase login/registratie
+│   └── account/page.tsx        # Mijn account, bestellingen etc.
+│
+├── components/                # Herbruikbare visuele componenten
+│   ├── ui/                    # Buttons, forms, modals, etc.
+│   ├── layout/                # Header, Footer, Grid-structuren
+│   └── product/               # ProductCard, QuantitySelector, PrijsLabel etc.
+│
+├── lib/
+│   ├── medusa.ts               # API-client voor frontend (@medusajs/medusa-js)
+│   ├── supabase/               # Supabase SSR clients (client.ts/server.ts)
+│
+├── middleware.ts              # Supabase-auth middleware (cookie sync)
+├── public/                    # Afbeeldingen, icons, favicons
+├── styles/                    # Tailwind config, custom SCSS
+├── .env.local                 # NEXT_PUBLIC_ vars incl. backend URL
+├── tailwind.config.js         # Tailwind configuratie
+├── postcss.config.js
+└── tsconfig.json              # Typescript config
+```
+
+---
+
+## ❗ Strenge ontwikkelregels (voor AI, devs en code reviews)
+
+1. ❌ Maak **nooit** dubbele utility functies aan — gebruik helpers in `lib/`
+2. ✅ Gebruik uitsluitend `@supabase/ssr`, nooit `auth-helpers-nextjs`
+3. ✅ Cookie handling alleen via `getAll()` en `setAll()` (nooit `get`, `set`, `remove`)
+4. ✅ Gebruik `createBrowserClient()` en `createServerClient()` exact zoals gespecificeerd in `.cursorrule`
+5. ✅ Hergebruik componenten: bijv. `ProductCard.tsx` voor homepage én zoekresultaten
+6. ✅ Gebruik `layout.tsx` (uit `app/`) voor paginawraps en consistentie
+7. ✅ Backend-communicatie via `medusa.ts`, nooit inline fetch() calls met hardcoded URLs
+
+---
+
+## 📘 README.md (voorstel inhoud)
+
+```markdown
+# Wasgeurtje Headless Webshop
+
+Wasgeurtje is een moderne headless webshop gebaseerd op Medusa.js en Next.js. 
+Deze repo combineert backend (Medusa) en frontend (Next.js 14) in één monorepo voor eenvoudig beheer en samenwerking.
+
+## 📦 Stackoverzicht
+- **Backend**: Medusa.js, PostgreSQL, Redis
+- **Frontend**: Next.js, TypeScript, TailwindCSS
+- **Auth**: Supabase (SSR + Middleware + session sync)
+- **Hosting**: Render + Vercel (optioneel Netlify)
+
+## 🗂️ Projectstructuur
+- `src/` + `medusa-config.ts`: backendlogica (Medusa)
+- `frontend/`: Next.js webshop en customer facing UI
+
+## 🛠️ Ontwikkelen
+
+```bash
+cd frontend
+npm run dev
+```
+
+Zorg dat je backend lokaal draait op `http://localhost:9000`
+
+```bash
+cd .. && npm run dev
+```
+
+## 🔐 Supabase Auth
+- SSR client: `lib/supabase/server.ts`
+- Browser client: `lib/supabase/client.ts`
+- Middleware: `middleware.ts` (volgt `getAll()` / `setAll()` cookiepatroon)
+
+## 📚 Documentatie
+- [Supabase SSR setup](./lib/supabase/README.md)
+- [Medusa backend docs](https://docs.medusajs.com)
+- [.cursorrule richtlijnen](./.cursorrule)

@@ -1,0 +1,308 @@
+# 📁 Projectstructuur: my-medusa-store
+
+Dit project is een monorepo waarin we zowel de Medusa backend als de volledige custom Next.js frontend voor Wasgeurtje.nl onderhouden. 
+Het doel is om de volledige e-commerce beleving van https://wasgeurtje.nl na te bouwen, met integratie van Medusa als headless backend en een pixel-perfect Next.js frontend. De backend beheert alle bedrijfslogica zoals producten, orders, loyaliteitsprogramma's en voorraadbeheer. De frontend dient als representatieve, conversie-geoptimaliseerde webshop gekoppeld aan de backend.
+
+## ✅ Doel van het project
+
+- Volledige rebuild van Wasgeurtje.nl in een modern headless stack
+- Backend: Medusa (gehost op Render & lokaal), beheert businesslogica, extensies, workflows en REST API's
+- Frontend: Next.js 14 (App Router) met Supabase Auth SSR ondersteuning (bijv. voor loyalty/mijn account, gepersonaliseerd shoppen)
+- API-integratie via `@medusajs/medusa-js` (op de frontend)
+- Pixel-perfect, elegant en conversiegericht design gebaseerd op https://wasgeurtje.nl
+- Futureproof architectuur, geschikt voor composable commerce / JAMstack-principes
+
+### ⚙️ Build-tooling
+- Tijdens setup is gekozen voor **Turbopack** in plaats van Webpack voor snellere builds en reloads.
+- Bij voorkeur behouden we dit tenzij package-incompatibiliteit optreedt.
+- Turbopack wordt ondersteund voor alle development-workflows.
+- Indien nodig kan `webpack` handmatig teruggeschakeld worden via `next.config.js`
+
+SEO & IMAGE OPTIMALISATIE – WASGEURTJE.NL
+
+1. Elke pagina moet een SEO-head bevatten via next/head met:
+   - <title> en <meta description>
+   - <link rel="canonical">
+   - Open Graph (og:title, og:description, og:image, og:url)
+   - Twitter card meta tags
+   - JSON-LD structured data: minstens Organization en indien van toepassing Product
+
+2. Gebruik altijd de <Image /> component van next/image:
+   - Alt-tekst verplicht (voor SEO en toegankelijkheid)
+   - Gebruik 'fill' of specifieke width/height afhankelijk van layout
+   - Externe domeinen moeten worden toegevoegd aan images.domains in next.config.js
+
+3. SVG-bestanden:
+   - SVG icons en logo's moeten als React component geïmporteerd worden via @svgr/webpack
+   - Geen inline <img> voor SVG tenzij extern of buiten React-structuur
+
+4. WebP-bestanden:
+   - Alle visuele content (productfoto's, banners) moet in WebP worden opgeslagen
+   - Beelden worden lokaal gehost in /public/images/
+   - Altijd lazy loaden tenzij 'priority' expliciet vereist is (zoals hero image)
+
+5. Client/server rendering:
+   - Gebruik 'use client' alleen voor gedrag zoals scroll-effecten of interactiviteit
+   - Alle SEO-relevante content moet server-side gerenderd zijn
+
+6. Accessibility:
+   - <Image> of <img> tags moeten altijd een zinvolle alt bevatten
+   - Navigatiebuttons moeten aria-labels hebben
+
+
+PERFORMANCE & BUNDLE OPTIMALISATIE – WASGEURTJE.NL
+
+1. Gebruik 'use client' alleen waar strikt noodzakelijk (interactie, scroll, etc). Alle statische pagina-inhoud moet SSR (server-rendered) blijven voor performance en SEO.
+
+2. Gebruik Next.js 'next/image' component voor ALLE afbeeldingen:
+   - Prioriteer hero-images met `priority`
+   - Alle andere images lazy-loaden (standaardgedrag)
+   - Altijd alt-tekst gebruiken
+
+3. Laad zware componenten zoals reviews, sliders of video pas na interactie of via dynamic import:
+   - Gebruik `next/dynamic` met `{ ssr: false }` en `loading` fallback
+   - Bijvoorbeeld: `const Reviews = dynamic(() => import('./Reviews'), { ssr: false })`
+
+4. Vermijd third-party scripts in dev:
+   - Scripts zoals Hyros, Hotjar, Facebook Pixel etc. pas injecteren als `NODE_ENV === 'production'`
+   - Voeg conditionele checks toe op `typeof window !== 'undefined'`
+
+5. Vermijd onnodige client-side WebSocket verbindingen in productie.
+   - Dev tooling (zoals Medusa live reload / hot reload via sockets) worden niet gebruikt op productie
+
+6. Minificeer en split grote bundels:
+   - Gebruik `swcMinify: true`
+   - Gebruik `output: 'standalone'` om lean builds te genereren
+   - Analyseer bundelgrootte regelmatig met `@next/bundle-analyzer`
+
+7. Test performance altijd via `npm run build && npm start` of via [pagespeed.web.dev](https://pagespeed.web.dev/)
+   - Vermijd Lighthouse tests met actieve browserextensies
+
+8. Zorg dat je `Cache-Control` headers instelt op assets via `next.config.js`:
+   - Voorbeelden: `js`, `css`, `webp`, `svg`, `png` → `max-age=31536000, immutable`
+
+9. ## Hoe voeg je producten toe aan de homepage?
+
+   ### Aanbevolen methode: Collecties gebruiken
+   Gebruik `getProductsByCollection` in `lib/medusa.ts` om groepen producten (bijv. "Best Verkocht", "Premium") op te halen van de backend:
+
+   ```typescript
+   // app/page.tsx (Voor categoriegroepen via Collecties)
+   import { getProductsByCollection } from '@/lib/medusa'; // Adjust import path
+   // ... other imports
+
+   export default async function Home() {
+     const regionId = 'reg_01JRZPT5R3R1M46C2MXY8QXZRD';
+     const bestSellerCollectionId = 'pcol_xxxxxxxxxxxxxx'; // ID uit Medusa Admin
+
+     const bestSellerProducts = await getProductsByCollection(bestSellerCollectionId, regionId);
+
+     // Data prepareren voor de tabbladen
+     const productsData = {
+        'best-verkocht': bestSellerProducts.map(p => ({ 
+            id: p.id,
+            name: p.title,
+            // Directe prijs gebruiken zonder berekeningen - 14,95 formaat wordt verwacht
+            price: p.variants?.[0]?.prices?.[0]?.amount || "0", 
+            imageUrl: p.thumbnail || '/images/placeholder.webp',
+            altText: `Wasparfum ${p.title}`
+        })),
+        'premium': [], // Op vergelijkbare wijze andere collecties ophalen
+        'collecties-sets': [],
+     };
+
+     return (
+       <>
+         {/* ... rest of page ... */}
+         <FeaturedProductsTabs productsByCategory={productsData} />
+         {/* ... rest of page ... */}
+       </>
+     );
+   }
+   ```
+
+   ### Alternatieve methode: Specifieke producten ophalen
+   Voor specifieke, individuele producten (wanneer je exacte control nodig hebt), kun je API endpoints direct aanroepen:
+   
+   ```typescript
+   // app/page.tsx (Voor specifieke producten)
+   // ... imports ...
+
+   // Helper functies voor API-calls
+   async function getSingleProduct(productId: string) {
+     const apiUrl = `${baseUrl}/store/products/${productId}`;
+     const response = await fetch(apiUrl, { headers, cache: 'no-store' });
+     // ... error handling ...
+     const data = await response.json();
+     return data.product;
+   }
+
+   export default async function Home() {
+     // Data voorbereiden
+     let productsData = JSON.parse(JSON.stringify(mockProductsData)); // Fallback data
+     const fullMoonProductId = 'prod_01JRZMGTR2XWJ64KNDBP71E2DK';
+     
+     // Product data ophalen
+     const fullMoonData = await getSingleProduct(fullMoonProductId);
+     
+     // Verwerk Full Moon data indien aanwezig
+     if (fullMoonData && fullMoonData.variants && fullMoonData.variants.length > 0) {
+       // Gebruik gewoon de eerste variant prijs zonder verdere berekeningen
+       const fullMoonProduct = {
+         id: fullMoonData.id,
+         name: fullMoonData.title,
+         // Rechtstreeks de prijs gebruiken zonder berekeningen
+         price: fullMoonData.variants[0].prices[0].amount,
+         imageUrl: fullMoonData.thumbnail || '/images/placeholder.webp',
+         altText: `Wasparfum ${fullMoonData.title}`,
+       };
+       
+       // Vervang mock data met echte data
+       const indexToReplace = productsData['best-verkocht'].findIndex(p => p.id === 'prod_4_mock');
+       if (indexToReplace !== -1) {
+         productsData['best-verkocht'][indexToReplace] = fullMoonProduct;
+       }
+     }
+
+     return (
+       <>
+         {/* ... page content ... */}
+         <FeaturedProductsTabs productsByCategory={productsData} />
+         {/* ... page content ... */}
+       </>
+     );
+   }
+   ```
+
+   ### Prijsweergave
+   In het presentatiecomponent (bijv. `FeaturedProductsTabs.tsx`), kun je de prijs direct tonen:
+   
+   ```tsx
+   // Prijs direct tonen in FeaturedProductsTabs.tsx
+   <p className="text-gray-700 font-semibold">{product.price}</p>
+   
+   // Met euro teken indien gewenst
+   <p className="text-gray-700 font-semibold">€{product.price}</p>
+   ```
+
+---
+
+## 📁 Backend structuur (Medusa)
+
+```
+my-medusa-store/
+├── src/                         # Medusa backendlogica
+│   ├── admin/                   # Admin-routes en panels
+│   ├── api/                     # REST API-routes (store/admin)
+│   ├── jobs/                    # Periodieke jobs, background tasks
+│   ├── links/                   # Relationele links tussen modules
+│   ├── modules/                 # Medusa-modules en services (ProductService, OrderService etc.)
+│   ├── scripts/                 # Seed, integratie scripts, utilities
+│   ├── subscribers/             # Event-driven handlers (bijv. na order geplaatst)
+│   └── workflows/               # Custom workflows (order flow, loyalty flow etc.)
+│
+├── integration-tests/          # Backend-integratietests
+├── medusa-config.ts            # Projectconfiguratie incl. database, Redis, plugins, poortinstelling
+├── .env                        # Gevoelige configuratie: DATABASE_URL, REDIS_URL, API_KEYS
+├── .env.template               # Template voor nieuwe devs / staging
+├── package.json                # Backend dependencies
+├── yarn.lock                   # Dependency lock
+├── tsconfig.json               # Typescript configuratie
+└── ...                         # Jest config, logging tools, CLI scripts
+```
+
+### 🌐 Voorbeeld API:
+- `http://localhost:9000/store/products` → Openbare productdata (frontend gebruikt deze)
+- `http://localhost:9000/admin/orders` → Beheerderslogica (afgeschermd via API key/token)
+
+Medusa draait lokaal op poort `9000` en is gekoppeld aan je lokale PostgreSQL database + Redis instance. Hosting via Render is mogelijk.
+
+---
+
+## 📁 Frontend structuur (Next.js 14)
+
+```
+frontend/
+├── app/                         # Next.js App Router
+│   ├── layout.tsx              # Algemene layout (header/footer)
+│   ├── page.tsx                # Homepage
+│   ├── producten/              # Product overzichtspagina
+│   │   └── [handle]/page.tsx   # Dynamische product detailpagina
+│   ├── categorieen/            # Gecategoriseerde collecties (Premium, Best verkocht, etc.)
+│   ├── winkelwagen/page.tsx    # Cart functionaliteit
+│   ├── afrekenen/page.tsx      # Checkout (incl. adres, betaalmethodes)
+│   ├── login/page.tsx          # Supabase login/registratie
+│   └── account/page.tsx        # Mijn account, bestellingen etc.
+│
+├── components/                # Herbruikbare visuele componenten
+│   ├── ui/                    # Buttons, forms, modals, etc.
+│   ├── layout/                # Header, Footer, Grid-structuren
+│   └── product/               # ProductCard, QuantitySelector, PrijsLabel etc.
+│
+├── lib/
+│   ├── medusa.ts               # API-client voor frontend (@medusajs/medusa-js)
+│   ├── supabase/               # Supabase SSR clients (client.ts/server.ts)
+│
+├── middleware.ts              # Supabase-auth middleware (cookie sync)
+├── public/                    # Afbeeldingen, icons, favicons
+├── styles/                    # Tailwind config, custom SCSS
+├── .env.local                 # NEXT_PUBLIC_ vars incl. backend URL
+├── tailwind.config.js         # Tailwind configuratie
+├── postcss.config.js
+└── tsconfig.json              # Typescript config
+```
+
+---
+
+## ❗ Strenge ontwikkelregels (voor AI, devs en code reviews)
+
+1. ❌ Maak **nooit** dubbele utility functies aan — gebruik helpers in `lib/`
+2. ✅ Gebruik uitsluitend `@supabase/ssr`, nooit `auth-helpers-nextjs`
+3. ✅ Cookie handling alleen via `getAll()` en `setAll()` (nooit `get`, `set`, `remove`)
+4. ✅ Gebruik `createBrowserClient()` en `createServerClient()` exact zoals gespecificeerd in `.cursorrule`
+5. ✅ Hergebruik componenten: bijv. `ProductCard.tsx` voor homepage én zoekresultaten
+6. ✅ Gebruik `layout.tsx` (uit `app/`) voor paginawraps en consistentie
+7. ✅ Backend-communicatie via `medusa.ts`, nooit inline fetch() calls met hardcoded URLs
+
+---
+
+## 📘 README.md (voorstel inhoud)
+
+```markdown
+# Wasgeurtje Headless Webshop
+
+Wasgeurtje is een moderne headless webshop gebaseerd op Medusa.js en Next.js. 
+Deze repo combineert backend (Medusa) en frontend (Next.js 14) in één monorepo voor eenvoudig beheer en samenwerking.
+
+## 📦 Stackoverzicht
+- **Backend**: Medusa.js, PostgreSQL, Redis
+- **Frontend**: Next.js, TypeScript, TailwindCSS
+- **Auth**: Supabase (SSR + Middleware + session sync)
+- **Hosting**: Render + Vercel (optioneel Netlify)
+
+## 🗂️ Projectstructuur
+- `src/` + `medusa-config.ts`: backendlogica (Medusa)
+- `frontend/`: Next.js webshop en customer facing UI
+
+## 🛠️ Ontwikkelen
+
+```bash
+cd frontend
+npm run dev
+```
+
+Zorg dat je backend lokaal draait op `http://localhost:9000`
+
+```bash
+cd .. && npm run dev
+```
+
+## 🔐 Supabase Auth
+- SSR client: `lib/supabase/server.ts`
+- Browser client: `lib/supabase/client.ts`
+- Middleware: `middleware.ts` (volgt `getAll()` / `setAll()` cookiepatroon)
+
+## 📚 Documentatie
+- [Supabase SSR setup](./lib/supabase/README.md)
+- [Medusa backend docs](https://docs.medusajs.com)
+- [.cursorrule richtlijnen](./.cursorrule)
