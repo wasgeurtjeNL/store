@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+/* 
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -23,32 +23,30 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+} */
+
+
+.nav-icon-btn{
+  @apply h-[30px] w-[35px] text-[#FCCE4E]
 }
 
-/* Animation Keyframes */
-@keyframes shimmer {
-  0% { background-position: -100% 0; }
-  100% { background-position: 100% 0; }
+.custom-bullet {
+  width: 10px;
+  height: 10px;
+  background-color: #D4BBA5;
+  border-radius: 50%;
+  display: inline-block;
+  cursor: pointer;
+  opacity: 0.7;
 }
-
-@keyframes ping {
-  0%, 100% { 
-    transform: translate(-50%, -50%) scale(0); 
-    opacity: 0; 
-  }
-  50% { 
-    transform: translate(-50%, -50%) scale(1); 
-    opacity: 1; 
-  }
+.custom-bullet-active {
+  background-color: #8A5529;
+  opacity: 1;
 }
-
-@keyframes glint {
-  0%, 60%, 100% { opacity: 0; }
-  70%, 80% { opacity: 0.7; }
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
-
-@keyframes scanline {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
