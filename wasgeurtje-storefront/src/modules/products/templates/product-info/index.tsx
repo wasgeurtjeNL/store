@@ -1,12 +1,22 @@
+"use client"
 import { HttpTypes } from "@medusajs/types"
 import { Heading, Text } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { CheckCircle } from "lucide-react"
 
 type ProductInfoProps = {
   product: HttpTypes.StoreProduct
 }
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
+  const {
+    metadata: { benefits },
+  } = product
+
+  const benefitsData = JSON.parse(benefits)
+
+  // console.log(benefitsData)
+
   return (
     <div id="product-info">
       <div className="flex flex-col gap-y-4 lg:max-w-[500px] mx-auto">
@@ -32,7 +42,20 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
         >
           {product.description}
         </Text>
+
+        <div className="">
+          <h4>What you will experience</h4>
+          <ul className="flex flex-col gap-2 pt-2">
+            {benefitsData.map((item: string) => (
+              <li key={item} className="flex gap-2 items-center">
+                <CheckCircle className="text-[#D5AD60]" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
+      <div></div>
     </div>
   )
 }

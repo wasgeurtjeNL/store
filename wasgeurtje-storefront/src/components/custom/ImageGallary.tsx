@@ -15,7 +15,7 @@ const ImageGallary: React.FC<any> = ({ images }) => {
   }
   return (
     <div className="flex flex-col gap-3 max-w-[350px] lg:max-w-[580px] w-full mx-auto">
-      <div className="flex items-center justify-center border border-yellow-400 rounded-lg max-w-[450px] max-h-[450px] w-full h-full">
+      <div className="flex items-center justify-center border-2 border-yellow-400 rounded-lg max-w-[450px] max-h-[450px] w-full h-full overflow-hidden">
         {selectedImage?.url && (
           <Image
             src={selectedImage?.url}

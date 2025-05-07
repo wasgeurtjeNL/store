@@ -15,6 +15,7 @@ import Image from "next/image"
 import ImageGallary from "components/custom/ImageGallary"
 import ImageRating from "../../../public/images/star-rating.svg"
 import ImageTPLogo from "../../../public/images/tp_logo.png"
+import { CheckCircle } from "lucide-react"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -31,40 +32,29 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
     return notFound()
   }
 
-  console.log({ product })
+  const featuresData = JSON.parse(product?.metadata?.features as string)
+
+  console.log({ featuresData })
 
   return (
     <>
       <div
-        // className="content-container flex flex-col small:flex-row small:items-start py-6 relative"
         className="content-container flex flex-col small:flex-row small:items-start py-6 relative gap-3 md:gap-6 bg-[#FAF7F2]"
         data-testid="product-container"
       >
-        {/* <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
-          <ProductInfo product={product} />
-          <ProductTabs product={product} />
-        </div> */}
-        {/* <div className="block w-full relative">
-          <ImageGallery images={product?.images || []} />
-        </div> */}
-        {/* <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <ProductPrice product={product} />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
-          >
-            <ProductActionsWrapper id={product.id} region={region} />
-          </Suspense>
-        </div> */}
-
         <div>
           <ImageGallary images={product?.images} />
+          <div className="max-w-[636px]  w-full bg-[#F7F0E4] border border-[#D5AD60] mt-4 p-3  rounded-md">
+            <h4 className="text-lg font-medium pb-2">We promise you</h4>
+            <div className=" grid grid-cols-1 gap-2">
+              {featuresData.map((item: string) => (
+                <div key={item} className="flex  gap-2">
+                  <CheckCircle className="text-[#D5AD60]" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
         <div>
           <div className="flex items-center flex-col md:flex-row gap-2 md:gap-5 px-2 md:px-6">
@@ -80,6 +70,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
             <br />
             <ProductTabs product={product} />
           </div>
+
           <div className="pt-6">
             <ProductOnboardingCta />
 
@@ -96,26 +87,9 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
             </Suspense>
           </div>
         </div>
-
-        <div>
-          {/* <div className="flex justify-center items-center gap-2">
-            {product?.images?.length > 0 &&
-              product.images?.map((image, index) => (
-                <div
-                  key={index}
-                  className="border border-yellow-400/90 rounded-lg p-1 drop-shadow-lg group"
-                >
-                  <Image
-                    src={image.url}
-                    alt="product"
-                    width={80}
-                    height={80}
-                    className="rounded-lg cursor-pointer group-hover:scale-110 transition-all duration-300"
-                  />
-                </div>
-              ))}
-          </div> */}
-        </div>
+      </div>
+      <div className="product-container px-4 py-4 bg-[#FAF7F2]">
+        {product.metadata.info}
       </div>
       <div
         className="bg-[#FAF7F2] px-4 md:px-12 py-4 md:py-8"
